@@ -1,59 +1,54 @@
---+----------------------------------------------------------------------------
---|
---| NAMING CONVENSIONS :
---|
---|    xb_<port name>           = off-chip bidirectional port ( _pads file )
---|    xi_<port name>           = off-chip input port         ( _pads file )
---|    xo_<port name>           = off-chip output port        ( _pads file )
---|    b_<port name>            = on-chip bidirectional port
---|    i_<port name>            = on-chip input port
---|    o_<port name>            = on-chip output port
---|    c_<signal name>          = combinatorial signal
---|    f_<signal name>          = synchronous signal
---|    ff_<signal name>         = pipeline stage (ff_, fff_, etc.)
---|    <signal name>_n          = active low signal
---|    w_<signal name>          = top level wiring signal
---|    g_<generic name>         = generic
---|    k_<constant name>        = constant
---|    v_<variable name>        = variable
---|    sm_<state machine type>  = state machine type definition
---|    s_<signal name>          = state name
---|
---+----------------------------------------------------------------------------
-library ieee;
-  use ieee.std_logic_1164.all;
-  use ieee.numeric_std.all;
-
+library IEEE;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_ARITH.ALL;
+use IEEE.STD_LOGIC_UNSIGNED.ALL;
 
 entity top_basys3 is
-    port(
-        -- inputs
-        clk     :   in std_logic; -- native 100MHz FPGA clock
-        sw      :   in std_logic_vector(7 downto 0); -- operands and opcode
-        btnU    :   in std_logic; -- reset
-        btnC    :   in std_logic; -- fsm cycle
-        
-        -- outputs
-        led :   out std_logic_vector(15 downto 0);
-        -- 7-segment display segments (active-low cathodes)
-        seg :   out std_logic_vector(6 downto 0);
-        -- 7-segment display active-low enables (anodes)
-        an  :   out std_logic_vector(3 downto 0)
+    Port (
+        clk    : in  STD_LOGIC;
+        btnU   : in  STD_LOGIC;
+        btnC   : in  STD_LOGIC;
+        sw     : in  STD_LOGIC_VECTOR(7 downto 0);
+        op_sel : in  STD_LOGIC_VECTOR(2 downto 0);
+        led    : out STD_LOGIC_VECTOR(15 downto 0)
     );
 end top_basys3;
 
-architecture top_basys3_arch of top_basys3 is 
-  
-	-- declare components and signals
-
-  
+architecture Behavioral of top_basys3 is
+    signal state        : STD_LOGIC_VECTOR(3 downto 0);
+    signal A_reg, B_reg : STD_LOGIC_VECTOR(7 downto 0);
+    signal result       : STD_LOGIC_VECTOR(7 downto 0);
+    signal flags        : STD_LOGIC_VECTOR(3 downto 0);
 begin
-	-- PORT MAPS ----------------------------------------
+    FSM: entity work.controller_fsm
+        port map (
+            clk   => clk,
+            reset => btnU,
+            adv   => btnC,
+            state => state
+        );
 
-	
-	
-	-- CONCURRENT STATEMENTS ----------------------------
-	
-	
-	
-end top_basys3_arch;
+    process(clk)
+    begin
+        if rising_edge(clk) then
+            if state = "0010" then
+                A_reg <= sw;
+            elsif state = "0100" then
+                B_reg <= sw;
+            end if;
+        end if;
+    end process;
+
+    ALU: entity work.alu
+        port map (
+            i_A     => A_reg,
+            i_B     => B_reg,
+            i_op    => op_sel,
+            o_result=> result,
+            o_flags => flags
+        );
+
+    led(15 downto 12) <= flags;
+    led(11 downto 4)  <= result;
+    led(3 downto 0)   <= state;
+end Behavioral;
