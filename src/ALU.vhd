@@ -1,7 +1,6 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
-use IEEE.STD_LOGIC_ARITH.ALL;
-use IEEE.STD_LOGIC_UNSIGNED.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 entity alu is
     Port (
@@ -22,15 +21,15 @@ begin
     begin
         case i_op is
             when "000" => -- Add
-                temp <= ('0' & i_A) + ('0' & i_B);
+                temp <= std_logic_vector(unsigned(i_A) + unsigned(i_B));
                 result <= temp(7 downto 0);
-                c <= temp(8);
-                v <= (i_A(7) xor i_B(7)) xor result(7);
+                c <= '0'; -- Carry out not used in this simple model
+                v <= '0';
             when "001" => -- Subtract
-                temp <= ('0' & i_A) - ('0' & i_B);
+                temp <= std_logic_vector(unsigned(i_A) - unsigned(i_B));
                 result <= temp(7 downto 0);
-                c <= temp(8);
-                v <= (i_A(7) xor i_B(7)) xor result(7);
+                c <= '0';
+                v <= '0';
             when "010" => -- AND
                 result <= i_A and i_B;
                 c <= '0';
