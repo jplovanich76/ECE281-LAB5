@@ -1,3 +1,4 @@
+-- alu.vhd
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
@@ -14,21 +15,21 @@ end alu;
 
 architecture Behavioral of alu is
     signal result : STD_LOGIC_VECTOR(7 downto 0);
-    signal temp   : STD_LOGIC_VECTOR(8 downto 0);
     signal n, z, c, v : STD_LOGIC;
 begin
     process(i_A, i_B, i_op)
+        variable temp : unsigned(8 downto 0);
     begin
         case i_op is
             when "000" => -- Add
-                temp <= std_logic_vector(unsigned(i_A) + unsigned(i_B));
-                result <= temp(7 downto 0);
-                c <= '0'; -- Carry out not used in this simple model
+                temp := ('0' & unsigned(i_A)) + ('0' & unsigned(i_B));
+                result <= std_logic_vector(temp(7 downto 0));
+                c <= temp(8);
                 v <= '0';
             when "001" => -- Subtract
-                temp <= std_logic_vector(unsigned(i_A) - unsigned(i_B));
-                result <= temp(7 downto 0);
-                c <= '0';
+                temp := ('0' & unsigned(i_A)) - ('0' & unsigned(i_B));
+                result <= std_logic_vector(temp(7 downto 0));
+                c <= temp(8);
                 v <= '0';
             when "010" => -- AND
                 result <= i_A and i_B;
