@@ -1,9 +1,3 @@
-----------------------------------------------------------------------------------
---  ALU Test-bench
---  • Targets the 8-bit ALU of DDCA-RISC-V (Fig. 5-17)
---  • Exercises the four Table 5-1 operations (Add, Sub, And, Or)
---  • Verifies both the data result and the NZCV flag vector
-----------------------------------------------------------------------------------
 
 library ieee;
     use ieee.std_logic_1164.all;
