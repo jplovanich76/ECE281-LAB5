@@ -1,47 +1,40 @@
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
 entity controller_fsm is
     Port (
-        clk   : in  STD_LOGIC;
-        reset : in  STD_LOGIC;
-        adv   : in  STD_LOGIC;
-        state : out STD_LOGIC_VECTOR (3 downto 0)
+        i_reset  : in STD_LOGIC;
+        i_adv    : in STD_LOGIC;
+        o_cycle  : out STD_LOGIC_VECTOR (3 downto 0)
     );
 end controller_fsm;
 
-architecture Behavioral of controller_fsm is
-    type state_type is (S0, S1, S2, S3);
-    signal current_state, next_state : state_type;
+architecture FSM of controller_fsm is
+    signal f_Q, f_Q_next : STD_LOGIC_VECTOR (1 downto 0);
 begin
-    process(clk, reset)
+    -- Next State Logic
+    f_Q_next <= "00" when f_Q = "11" and i_adv = '1' else
+                "01" when f_Q = "00" and i_adv = '1' else
+                "10" when f_Q = "01" and i_adv = '1' else
+                "11" when f_Q = "10" and i_adv = '1' else
+                f_Q;
+
+    -- Output Logic
+    with f_Q select
+    o_cycle <= "0001" when "00",
+               "0010" when "01",
+               "0100" when "10",
+               "1000" when "11",
+               "0001" when others;
+
+    -- Register Process
+    register_proc : process (i_adv, i_reset)
     begin
-        if reset = '1' then
-            current_state <= S0;
-        elsif rising_edge(clk) then
-            if adv = '1' then
-                current_state <= next_state;
-            end if;
+        if i_reset = '1' then
+            f_Q <= "00";
+        elsif (i_adv = '1') then
+            f_Q <= f_Q_next;
         end if;
     end process;
-
-    process(current_state)
-    begin
-        case current_state is
-            when S0 => next_state <= S1;
-            when S1 => next_state <= S2;
-            when S2 => next_state <= S3;
-            when S3 => next_state <= S0;
-        end case;
-    end process;
-
-    process(current_state)
-    begin
-        case current_state is
-            when S0 => state <= "0001";
-            when S1 => state <= "0010";
-            when S2 => state <= "0100";
-            when S3 => state <= "1000";
-        end case;
-    end process;
-end Behavioral;
+end FSM;
